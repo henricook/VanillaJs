@@ -1,7 +1,5 @@
 # Vanilla Project for scala.js
 
-initialise: `sbt clean update compile`
+to generate javascript: `sbt fastOptJS`
 
-compile: `sbt compile`
-
-test: `sbt test`
+then open `index-dev.html` with your browser
