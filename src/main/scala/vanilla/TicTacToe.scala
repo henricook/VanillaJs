@@ -9,16 +9,17 @@ case class TicTacToe(private val table: Vector[Option[Player]]){
   def get(row: Int, column: Int): Option[Player] =
     table(3*row + column)
 
-  def winner: Option[Player] = {
-    val combinations: Seq[Seq[(Int, Int)]] =
-      (for {row <- 0 to 2} yield (row, row)) ::
-        (for {row <- 0 to 2} yield (row, 2 - row)) ::
-        (for {row <- 0 to 2; column <- 0 to 2} yield (row, column)).grouped(3).toList :::
-        (for {row <- 0 to 2; column <- 0 to 2} yield (column, row)).grouped(3).toList
-
-    combinations.map(_.map((get _).tupled)).map(winner(_))
+  def winner: Option[Player] =
+    rowsColumnsDiags
+      .map(_.map((get _).tupled))
+      .map(winner(_))
       .collectFirst{ case Some(p) => p}
-  }
+
+  private val rowsColumnsDiags: Seq[Seq[(Int, Int)]] =
+    (for {row <- 0 to 2} yield (row, row)) ::
+      (for {row <- 0 to 2} yield (row, 2 - row)) ::
+      (for {row <- 0 to 2; column <- 0 to 2} yield (row, column)).grouped(3).toList :::
+      (for {row <- 0 to 2; column <- 0 to 2} yield (column, row)).grouped(3).toList
 
   private def winner(cells: Seq[Option[Player]]): Option[Player] =
     cells.distinct.toList match {
