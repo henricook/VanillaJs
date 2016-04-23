@@ -6,7 +6,7 @@ import org.scalajs.jquery.{JQueryEventObject, jQuery}
 
 import scala.scalajs.js.JSApp
 import scala.scalajs.js.annotation.JSExport
-import scalatags.Text.all._
+import scalatags.JsDom.all._
 
 object TutorialApp extends JSApp {
 
@@ -21,15 +21,13 @@ object TutorialApp extends JSApp {
             `class` := "cell",
             "data-row".attr := row,
             "data-column".attr := column,
-            "-")
+            "-"
+          )
         ))
       ))
     )
 
-    val tableContainer = document.createElement("div")
-    tableContainer.innerHTML = gameTable.render
-    document.body.appendChild(tableContainer)
-
+    document.body.appendChild(gameTable.render)
     jQuery(".cell").click(handler _)
   }
 
