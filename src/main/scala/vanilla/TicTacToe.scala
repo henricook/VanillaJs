@@ -9,13 +9,18 @@ case class TicTacToe private(size: Int, table: Map[Coordinate, Option[Player]]){
       TicTacToe(size, table + (Coordinate(row, column) -> Some(player)))
     )
 
+  def state: State =
+    winner.fold(
+      if(table.values.forall(_.isDefined)) Draw else Undecided
+    )(Winner)
+
   def winner: Option[Player] =
     rowsColumnsDiags
       .map(_.map((get _).tupled))
       .map(_.distinct.toList match {
         case x :: Nil => x
         case _        => None
-      }).collectFirst{ case Some(p) => p}
+      }).collectFirst{ case Some(p) => p }
 
   private val rowsColumnsDiags: Seq[Seq[(Int, Int)]] = {
     val maxIndex = size - 1
@@ -35,10 +40,4 @@ object TicTacToe {
         column <- 0 until size
       } yield Coordinate(row, column) -> Option.empty[Player]).toMap
     )
-}
-
-case class Coordinate(row: Int, column: Int)
-
-object Coordinate {
-  implicit val ordering: Ordering[Coordinate] = Ordering.by(c => c.row -> c.column)
 }

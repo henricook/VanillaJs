@@ -30,9 +30,6 @@ object TutorialApp extends JSApp {
     document.body.appendChild(gameTable.render)
   }
 
-  def cellId(c: Coordinate): String =
-    s"cell-${c.row}-${c.column}"
-
   @JSExport
   def onCellClick(coordinate: Coordinate): Unit = {
     jQuery(s"#${cellId(coordinate)}")
@@ -42,10 +39,19 @@ object TutorialApp extends JSApp {
     game.set(coordinate.row, coordinate.column)(currentPlayer)
       .fold(println(s"Invalid coordinate $coordinate"))(game = _)
 
-    game.winner.foreach { player =>
-      document.body.appendChild(p(s"Player $player won").render)
-      jQuery(".cell").attr("disabled", true)
+    game.state match {
+      case Winner(player) => stopGame(s"Player $player won")
+      case Draw           => stopGame(s"It's a draw!")
+      case Undecided      => ()
     }
     currentPlayer = currentPlayer.next
+  }
+
+  def cellId(c: Coordinate): String =
+    s"cell-${c.row}-${c.column}"
+
+  def stopGame(announcement: String): Unit = {
+    document.body.appendChild(p(announcement).render)
+    jQuery(".cell").attr("disabled", true)
   }
 }
