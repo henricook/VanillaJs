@@ -1,33 +1,44 @@
 package vanilla
 
-case class TicTacToe(private val table: Vector[Option[Player]]){
-  def set(row: Int, column: Int)(player: Player): TicTacToe = {
-    require(row <= 3 && row >= 0 && column <= 3 && column >= 0)
-    TicTacToe(table.updated(3*row + column, Some(player)))
-  }
-
+case class TicTacToe private(size: Int, table: Map[Coordinate, Option[Player]]){
   def get(row: Int, column: Int): Option[Player] =
-    table(3*row + column)
+    table.get(Coordinate(row, column)).flatten
+
+  def set(row: Int, column: Int)(player: Player): Option[TicTacToe] =
+    table.get(Coordinate(row, column)).map(_ =>
+      TicTacToe(size, table + (Coordinate(row, column) -> Some(player)))
+    )
 
   def winner: Option[Player] =
     rowsColumnsDiags
       .map(_.map((get _).tupled))
-      .map(winner(_))
-      .collectFirst{ case Some(p) => p}
+      .map(_.distinct.toList match {
+        case x :: Nil => x
+        case _        => None
+      }).collectFirst{ case Some(p) => p}
 
-  private val rowsColumnsDiags: Seq[Seq[(Int, Int)]] =
-    (for {row <- 0 to 2} yield (row, row)) ::
-      (for {row <- 0 to 2} yield (row, 2 - row)) ::
-      (for {row <- 0 to 2; column <- 0 to 2} yield (row, column)).grouped(3).toList :::
-      (for {row <- 0 to 2; column <- 0 to 2} yield (column, row)).grouped(3).toList
-
-  private def winner(cells: Seq[Option[Player]]): Option[Player] =
-    cells.distinct.toList match {
-      case x :: Nil => x
-      case _ => None
-    }
+  private val rowsColumnsDiags: Seq[Seq[(Int, Int)]] = {
+    val maxIndex = size - 1
+    (for {row <- 0 to maxIndex} yield (row, row)) ::
+      (for {row <- 0 to maxIndex} yield (row, maxIndex - row)) ::
+      (for {row <- 0 to maxIndex; column <- 0 to maxIndex} yield (row, column)).grouped(size).toList :::
+      (for {row <- 0 to maxIndex; column <- 0 to maxIndex} yield (column, row)).grouped(size).toList
+  }
 }
 
 object TicTacToe {
-  val empty = TicTacToe(Vector.fill(9)(None))
+  def empty(size: Int): TicTacToe =
+    TicTacToe(
+      size,
+      (for {
+        row    <- 0 until size
+        column <- 0 until size
+      } yield Coordinate(row, column) -> Option.empty[Player]).toMap
+    )
+}
+
+case class Coordinate(row: Int, column: Int)
+
+object Coordinate {
+  implicit val ordering: Ordering[Coordinate] = Ordering.by(c => c.row -> c.column)
 }

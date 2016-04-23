@@ -10,31 +10,38 @@ import scalatags.JsDom.all._
 object TutorialApp extends JSApp {
 
   var currentPlayer: Player = Cross
-  var game = TicTacToe.empty
+  var game = TicTacToe.empty(3)
 
   def main(): Unit = {
     val gameTable = table(
-      (0 to 2).map(row => tr(
-        (0 to 2).map(column => td(
-          button(
-            id := s"cell-$row-$column",
-            `class` := "cell",
-            onclick := { () => onCellClick(row, column, s"cell-$row-$column") },
-            "-"
-          )
-        ))
+      game.table.keys.toList.sorted.grouped(game.size).toList
+        .map(row => tr(
+          row.map(coordinate => td(
+            button(
+              id := cellId(coordinate),
+              `class` := "cell",
+              onclick := { () => onCellClick(coordinate) },
+              "-"
+            )
+          ))
+        )
       ))
-    )
 
     document.body.appendChild(gameTable.render)
   }
 
-  @JSExport
-  def onCellClick(row: Int, column: Int, id: String): Unit = {
-    jQuery(s"#$id").text(currentPlayer.draw)
-    jQuery(s"#$id").attr("disabled", true)
+  def cellId(c: Coordinate): String =
+    s"cell-${c.row}-${c.column}"
 
-    game = game.set(row,column)(currentPlayer)
+  @JSExport
+  def onCellClick(coordinate: Coordinate): Unit = {
+    jQuery(s"#${cellId(coordinate)}")
+      .text(currentPlayer.draw)
+       .attr("disabled", true)
+
+    game.set(coordinate.row, coordinate.column)(currentPlayer)
+      .fold(println(s"Invalid coordinate $coordinate"))(game = _)
+
     game.winner.foreach { player =>
       document.body.appendChild(p(s"Player $player won").render)
       jQuery(".cell").attr("disabled", true)
